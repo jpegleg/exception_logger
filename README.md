@@ -363,16 +363,16 @@ predict(
 
 ### Without Context Arguments
 ```
-2026-02-08T05:55:31.756539+00:00 - ef4bd3f2-4333-4349-b10e-e16dc7b7e7f4 - test_division_by_zero - ERROR: ZeroDivisionError: division by zero (Line: 70)
-2026-02-08T05:55:31.756749+00:00 - ff65a001-2bae-4ba2-b462-663e1c03b2ce - test_file_not_found - ERROR: FileNotFoundError: [Errno 2] No such file or directory: '/nonexistent/file.txt' (Line: 70)
-2026-02-08T05:55:31.756921+00:00 - 3a671744-b8e3-4bf5-b339-7278884dd5af - test_key_error - ERROR: KeyError: 'b' (Line: 70)
+2026-02-08T08:14:36.013748+00:00 - 4b1274be-0428-4d11-ae0d-6402542ba7f6 - test_division_by_zero - ERROR: ZeroDivisionError: division by zero (File: test.py, Line: 14)
+2026-02-08T08:14:36.013911+00:00 - 46cd01e0-fdf2-4186-bc6c-f4930627b58e - test_file_not_found - ERROR: FileNotFoundError: [Errno 2] No such file or directory: '/nonexistent/file.txt' (File: test.py, Line: 22)
+2026-02-08T08:14:36.014010+00:00 - 76ed8968-e799-4b84-afa9-3a75a80ea120 - test_key_error - ERROR: KeyError: 'b' (File: test.py, Line: 30)
 ```
 
 ### With Context Arguments (log_this_*)
 ```
-2026-02-08T07:13:50.984493+00:00 - d0149a36-a774-4728-b9a6-fb01c2092596 - process_api_request - logged args: ip_address: 192.168.1.100, request_id: req_abc123, user_id: 12345 - ERROR: KeyError: 'required_field' (Line: 95)
-2026-02-08T07:13:50.984742+00:00 - 15babb32-2b96-430a-8914-c7b15d2b955a - process_payment - logged args: amount: 15000, currency: USD, merchant_id: merch_999, payment_method: credit_card, user_id: 54321 - ERROR: ValueError: Amount exceeds limit: 15000 (Line: 95)
-2026-02-08T07:13:50.984881+00:00 - 65107e0f-d46a-4ad2-94ba-fd1af824eb34 - process_uploaded_file - logged args: file_size: 2048576, filename: document.pdf, mime_type: application/pdf, uploader_id: 88888 - ERROR: FileNotFoundError: [Errno 2] No such file or directory: '/nonexistent/file.txt' (Line: 95)
+2026-02-08T08:13:51.620325+00:00 - f011e24d-0ae3-4982-8cf5-db39c056c905 - process_api_request - logged args: ip_address: 192.168.1.100, request_id: req_abc123, user_id: 12345 - ERROR: KeyError: 'required_field' (File: log_this_examples.py, Line: 30)
+2026-02-08T08:13:51.620590+00:00 - 59f947e5-fbf4-4450-a797-19b82f7467e6 - process_payment - logged args: amount: 15000, currency: USD, merchant_id: merch_999, payment_method: credit_card, user_id: 54321 - ERROR: ValueError: Amount exceeds limit: 15000 (File: log_this_examples.py, Line: 69)
+2026-02-08T08:13:51.620759+00:00 - 3ff961d3-6952-4c74-8312-fbfbc6135917 - process_uploaded_file - logged args: file_size: 2048576, filename: document.pdf, mime_type: application/pdf, uploader_id: 88888 - ERROR: FileNotFoundError: [Errno 2] No such file or directory: '/nonexistent/file.txt' (File: log_this_examples.py, Line: 85)
 ```
 
 ## Requirements
