@@ -403,7 +403,7 @@ predict(
 
 8. **Use consistent naming**: If you log `user_id` in one function, use the same name in others for easier log searching.
 
-9. **Only use the quiet version if the error doesn't need to be raised any further.**: Use the `exception_handler_quiet` on the top-level of error handling.
+9. **Only use the quiet version if the error doesn't need to be raised any further**: Use the `exception_handler_quiet` on the top-level of error handling.
 
 
 ## Example Log Output
