@@ -7,11 +7,11 @@ this module provides consistent and comprehensive logging and error handing appr
 
 ## Features
 
-- **Decorator-based exception handling**: Simply add `@exception_handler` to any function
+- **Decorator-based exception handling**: Simply add `@exception_handler` or `@exception_handler_quiet` to any function
 - **Comprehensive coverage**: Handles all standard Python built-in exceptions
 - **Structured logging**: ISO timestamps, UUIDs, function names, and error details
-- **Exception correlation**: Track related errors across multiple function calls with shared UUIDs
-- **Automatic re-raising**: Logs exceptions and re-raises them for proper error propagation
+- **Exception correlation**: Track related errors across multiple function calls with shared UUIDs/IDs/strings
+- **Automatic re-raising**: Logs exceptions and re-raises them for proper error propagation OR `_quiet` which does not re-raise
 - **Manual logging support**: For legacy code that can't use decorators
 
 ## Log format
@@ -19,7 +19,7 @@ this module provides consistent and comprehensive logging and error handing appr
 Each logged exception follows this structure:
 
 ```
-ISO-8601-Timestamp - UUIDv4 - function_name - [logged args: key1: value1, key2: value2] - ERROR: ExceptionType: message (File: filename.py, Line: line_number)
+ISO-8601-Timestamp - UUIDv4 (or whatever you want) - function_name - [logged args: key1: value1, key2: value2] - ERROR: ExceptionType: message (File: filename.py, Line: line_number)
 ```
 
 Example without logged arguments:
@@ -31,6 +31,12 @@ Example with logged arguments:
 ```
 2026-02-08T08:13:51.620325+00:00 - f011e24d-0ae3-4982-8cf5-db39c056c905 - process_api_request - logged args: ip_address: 192.168.1.100, request_id: req_abc123, user_id: 12345 - ERROR: KeyError: 'required_field' (File: api_handler.py, Line: 95)
 ```
+
+Instead of a UUIDv4, we could put something else there, such as the name of the service:
+```
+2026-02-08T08:13:51.620325+00:00 - web_correlator_green - process_api_request - logged args: ip_address: 192.168.1.100, request_id: req_abc123, user_id: 12345 - ERROR: KeyError: 'required_field' (File: api_handler.py, Line: 95)
+```
+
 
 ## Installation
 
@@ -49,7 +55,7 @@ Or include the module as `exception_logger.py` in your project, along with the M
 ## Usage
 
 The decorator automatically:
-- Accepts a UUID for logging or generates one if one isn't provided
+- Accepts a UUID (or whatever string you like) for logging or generates a UUIDv4 if one isn't provided
 - Detects the function name and logs it
 - Logs any exception with full details
 - Adds specified custom args to log lines
@@ -397,7 +403,7 @@ predict(
 
 8. **Use consistent naming**: If you log `user_id` in one function, use the same name in others for easier log searching.
 
-9. **Only use the quiet version if the error doesn't need to be raised any further.
+9. **Only use the quiet version if the error doesn't need to be raised any further.**: Use the `exception_handler_quiet` on the top-level of error handling.
 
 
 ## Example Log Output
