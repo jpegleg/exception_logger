@@ -153,7 +153,7 @@ process_payment(
 
 If an exception occurs, the log will include:
 ```
-2026-02-08T07:13:50.984742+00:00 - 15babb32-2b96-430a-8914-c7b15d2b955a - process_payment - logged args: amount: 5000, currency: USD, transaction_id: txn_abc123, user_id: 12345 - ERROR: ValueError: Amount exceeds limit (Line: 42)
+2026-02-08T07:13:50.984742+00:00 - 15babb32-2b96-430a-8914-c7b15d2b955a - process_payment - logged args: amount: 5000, currency: USD, transaction_id: txn_abc123, user_id: 12345 - ERROR: ValueError: Amount exceeds limit (File: example.py, Line: 42)
 ```
 
 **Benefits:**
