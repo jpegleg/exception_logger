@@ -14,22 +14,22 @@ this module provides consistent and comprehensive logging and error handing appr
 - **Automatic re-raising**: Logs exceptions and re-raises them for proper error propagation
 - **Manual logging support**: For legacy code that can't use decorators
 
-## Log Format
+## Log format
 
 Each logged exception follows this structure:
 
 ```
-ISO-8601-Timestamp - UUIDv4 - function_name - [logged args: key1: value1, key2: value2 - ]ERROR: ExceptionType: message (Line: line_number)
+ISO-8601-Timestamp - UUIDv4 - function_name - [logged args: key1: value1, key2: value2 - ]ERROR: ExceptionType: message (File: filename.py, Line: line_number)
 ```
 
 Example without logged arguments:
 ```
-2026-02-08T05:55:31.756539+00:00 - ef4bd3f2-4333-4349-b10e-e16dc7b7e7f4 - process_data - ERROR: KeyError: 'required_field' (Line: 42)
+2026-02-08T08:14:36.013748+00:00 - 4b1274be-0428-4d11-ae0d-6402542ba7f6 - process_data - ERROR: KeyError: 'required_field' (File: app.py, Line: 42)
 ```
 
 Example with logged arguments:
 ```
-2026-02-08T07:13:50.984493+00:00 - d0149a36-a774-4728-b9a6-fb01c2092596 - process_api_request - logged args: ip_address: 192.168.1.100, request_id: req_abc123, user_id: 12345 - ERROR: KeyError: 'required_field' (Line: 95)
+2026-02-08T08:13:51.620325+00:00 - f011e24d-0ae3-4982-8cf5-db39c056c905 - process_api_request - logged args: ip_address: 192.168.1.100, request_id: req_abc123, user_id: 12345 - ERROR: KeyError: 'required_field' (File: api_handler.py, Line: 95)
 ```
 
 ## Installation
@@ -40,9 +40,37 @@ Install with pip or uv:
 uv add exception_logger
 ```
 
-## Basic Usage
+```
+pip install exception_logger
+```
 
-### Using the Decorator
+Or include the module as `exception_logger.py` in your project, along with the MIT license.
+
+## Usage
+
+The decorator automatically:
+- Accepts a UUID for logging or generates one if none is passed
+- Detects the function name and logs it
+- Logs any exception with full details
+- Adds specified custom args to log lines
+- Re-raises the exception
+
+
+### Slap the decorator on main
+
+```python
+from exception_logger import exception_handler
+
+@exception_handler
+def main():
+    # do everything normally and reap the benfits of the exception logging!
+```
+
+If you decorate the main function, then there normally wouldn't be a need to decorate specific functions as that would duplicate error logs.
+
+While decorating main with the exception_handler is _super easy_ and actually awesome, in many cases you might want to customize the usage further and decorate individual functions.
+
+### Decorating a function
 
 ```python
 from exception_logger import exception_handler
@@ -53,14 +81,8 @@ def risky_operation(data):
     return data['key']  # May raise KeyError
 ```
 
-The decorator automatically:
-- Accepts a UUID for logging or generates one if none is passed
-- Detects the function name and logs it
-- Logs any exception with full details
-- Adds specified custom args to log lines
-- Re-raises the exception
 
-### Custom Exception ID and Function Name
+### Custom exception id and function name
 
 Pass custom values for correlation across multiple operations:
 
@@ -75,7 +97,7 @@ transaction_id = str(uuid.uuid4())
 database_query("SELECT * FROM users", exception_id=transaction_id)
 ```
 
-### Contextual Logging with `log_this_*` Arguments
+### Contextual logging with `log_this_*` arguments
 
 Automatically include important context in error logs by using `log_this_*` prefixed arguments. These are automatically extracted, logged, and removed before your function executes:
 
@@ -119,7 +141,7 @@ If an exception occurs, the log will include:
 - Clean code - no log message construction cluttering your business logic
 - Type-safe - works with IDE autocomplete
 
-### Manual Exception Handling
+### Manual exception handling
 
 For legacy code or special cases, you can manually log exceptions with context:
 
@@ -147,7 +169,7 @@ Note: When using `handle_exception()`, you can pass any keyword arguments as con
 
 ## Advanced Usage
 
-### Correlated Exception Tracking
+### Correlated exception tracking
 
 Track multiple related operations with a shared UUID:
 
@@ -172,7 +194,7 @@ def workflow(input_data):
 
 All exceptions in this workflow will share the same `workflow_id`, making it easy to track related errors in logs.
 
-### Nested Function Calls
+### Nested function calls
 
 Each function maintains its own exception handling:
 
@@ -186,16 +208,16 @@ def child_function(data, exception_id=None, func_name=None):
     return data['key']  # May raise KeyError
 ```
 
-## Covered Exception Types
+## Covered exception types
 
 The module handles all standard Python built-in exceptions, including:
 
-### System Exceptions
+### System exceptions
 - `KeyboardInterrupt`
 - `SystemExit`
 - `SystemError`
 
-### OS and I/O Exceptions
+### OS and I/O exceptions
 - `FileNotFoundError`
 - `FileExistsError`
 - `PermissionError`
@@ -205,13 +227,13 @@ The module handles all standard Python built-in exceptions, including:
 - `ConnectionError` and subclasses
 - `OSError` and all subclasses
 
-### Arithmetic Exceptions
+### Arithmetic exceptions
 - `ZeroDivisionError`
 - `FloatingPointError`
 - `OverflowError`
 - `ArithmeticError`
 
-### Type and Value Exceptions
+### Type and value exceptions
 - `TypeError`
 - `ValueError`
 - `UnicodeError` and subclasses
@@ -219,7 +241,7 @@ The module handles all standard Python built-in exceptions, including:
   - `UnicodeEncodeError`
   - `UnicodeTranslateError`
 
-### Lookup Exceptions
+### Lookup exceptions
 - `KeyError`
 - `IndexError`
 - `AttributeError`
@@ -227,15 +249,15 @@ The module handles all standard Python built-in exceptions, including:
 - `UnboundLocalError`
 - `LookupError`
 
-### Import Exceptions
+### Import exceptions
 - `ModuleNotFoundError`
 - `ImportError`
 
-### Memory and Resource Exceptions
+### Memory and resource exceptions
 - `MemoryError`
 - `RecursionError`
 
-### Runtime Exceptions
+### Runtime exceptions
 - `NotImplementedError`
 - `StopIteration`
 - `StopAsyncIteration`
@@ -243,12 +265,12 @@ The module handles all standard Python built-in exceptions, including:
 - `RuntimeError`
 - `RuntimeWarning`
 
-### Syntax Exceptions
+### Syntax exceptions
 - `SyntaxError`
 - `IndentationError`
 - `TabError`
 
-### Other Exceptions
+### Other exceptions
 - `AssertionError`
 - `BufferError`
 - `EOFError`
@@ -256,9 +278,9 @@ The module handles all standard Python built-in exceptions, including:
 - `Exception` (base class)
 - `BaseException` (ultimate base)
 
-## Real-World Usage Examples
+## More examples
 
-### API Request Handler
+### API request handler
 ```python
 @exception_handler
 def handle_api_request(
@@ -286,7 +308,7 @@ handle_api_request(
 )
 ```
 
-### Database Transaction
+### Database transaction
 ```python
 @exception_handler
 def execute_transaction(
@@ -315,7 +337,7 @@ execute_transaction(
 )
 ```
 
-### ML Model Serving
+### ML model serving
 ```python
 @exception_handler
 def predict(
@@ -341,7 +363,7 @@ predict(
 )
 ```
 
-## Best Practices
+## Best practices
 
 1. **Use `log_this_*` for important context**: Include relevant business context like user IDs, transaction IDs, request IDs, etc. This makes debugging much easier.
 
@@ -361,14 +383,14 @@ predict(
 
 ## Example Log Output
 
-### Without Context Arguments
+### Without context arguments
 ```
 2026-02-08T08:14:36.013748+00:00 - 4b1274be-0428-4d11-ae0d-6402542ba7f6 - test_division_by_zero - ERROR: ZeroDivisionError: division by zero (File: test.py, Line: 14)
 2026-02-08T08:14:36.013911+00:00 - 46cd01e0-fdf2-4186-bc6c-f4930627b58e - test_file_not_found - ERROR: FileNotFoundError: [Errno 2] No such file or directory: '/nonexistent/file.txt' (File: test.py, Line: 22)
 2026-02-08T08:14:36.014010+00:00 - 76ed8968-e799-4b84-afa9-3a75a80ea120 - test_key_error - ERROR: KeyError: 'b' (File: test.py, Line: 30)
 ```
 
-### With Context Arguments (log_this_*)
+### With context arguments (log_this_*)
 ```
 2026-02-08T08:13:51.620325+00:00 - f011e24d-0ae3-4982-8cf5-db39c056c905 - process_api_request - logged args: ip_address: 192.168.1.100, request_id: req_abc123, user_id: 12345 - ERROR: KeyError: 'required_field' (File: log_this_examples.py, Line: 30)
 2026-02-08T08:13:51.620590+00:00 - 59f947e5-fbf4-4450-a797-19b82f7467e6 - process_payment - logged args: amount: 15000, currency: USD, merchant_id: merch_999, payment_method: credit_card, user_id: 54321 - ERROR: ValueError: Amount exceeds limit: 15000 (File: log_this_examples.py, Line: 69)
@@ -380,7 +402,7 @@ predict(
 - Python 3.6+
 - No external dependencies (uses only standard library)
 
-## Project Information
+## Project information
 
 This project is usees the MIT License.
 
