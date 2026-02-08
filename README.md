@@ -399,7 +399,7 @@ predict(
 
 6. **Parse logs programmatically**: The structured format makes it easy to parse logs for monitoring and alerting systems.
 
-7. **Don't overload with log_this_* arguments**: Include only the most relevant context. Too many fields can make logs hard to read.
+7. **Don't overload with log_this_ arguments**: Include only the most relevant context. Too many fields can make logs hard to read.
 
 8. **Use consistent naming**: If you log `user_id` in one function, use the same name in others for easier log searching.
 
