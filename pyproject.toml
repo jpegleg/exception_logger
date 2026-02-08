@@ -1,0 +1,18 @@
+[project]
+name = "exception_logger"
+version = "0.1.0"
+description = "An exception wrapper for decorating functions with detailed generic error handling and logging."
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = []
+authors = [
+    {name = "Keegan Bowen", email = "carefuldata@protonmail.com"}
+]
+license = {text = "MIT"}
+keywords = ["error", "logging", "error handling", "error logging", "exception", "exceptions", "exception logging"]
+
+[project.urls]
+Homepage = "https://carefuldata.com"
+Documentation = "https://github.com/jpegleg/exception_logger/README.md"
+Repository = "https://github.com/jpegleg/exception_logger"
+Issues = "https://github.com/jpegleg/exception_logger/issues"
