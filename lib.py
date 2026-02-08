@@ -1,9 +1,10 @@
 """
 #### generic exception handler and logging module ####
- 
+
 Provides a decorator for automatic exception handling and logging with detailed
 information for all standard Python built-in exceptions.
 """
+
 import functools
 import sys
 from datetime import datetime, timezone
@@ -52,6 +53,7 @@ def log_exception(
 
         # Extract just the filename without full path for cleaner logs
         import os
+
         filename = os.path.basename(filename)
 
     # Format logged arguments if present
@@ -72,6 +74,63 @@ def log_exception(
     print(log_msg, file=sys.stdout)
 
 
+# Convenience function for manual exception handling
+def handle_exception(
+    exception_id: Optional[str] = None, func_name: Optional[str] = None, **logged_args
+) -> None:
+    """
+    Manually log the current exception.
+
+    Call this within an except block to log the exception with the same
+    format as the decorator.
+
+    Args:
+        exception_id: Optional UUID for tracking. Generated if not provided.
+        func_name: Optional function name. Detected from caller if not provided.
+        **logged_args: Any additional context to log (e.g., user_id=123, rate=0.5)
+
+    Example:
+        try:
+            risky_operation()
+        except Exception:
+            handle_exception(
+                exception_id="custom-uuid",
+                func_name="my_function",
+                user_id=12345,
+                request_id="abc-123"
+            )
+            raise
+    """
+    import inspect
+
+    exc_info = sys.exc_info()
+    if exc_info[0] is None:
+        print(
+            "Warning: handle_exception called outside of exception context",
+            file=sys.stdout,
+        )
+        return
+
+    if exception_id is None:
+        exception_id = str(uuid.uuid4())
+
+    if func_name is None:
+        frame = inspect.currentframe()
+        if frame and frame.f_back:
+            func_name = frame.f_back.f_code.co_name
+        else:
+            func_name = "unknown"
+
+    log_exception(
+        exception_id,
+        func_name,
+        exc_info[0],
+        exc_info[1],
+        exc_info,
+        logged_args
+    )
+
+
 def exception_handler(func: Callable) -> Callable:
     """
     Decorator that wraps a function with comprehensive exception handling.
@@ -83,19 +142,19 @@ def exception_handler(func: Callable) -> Callable:
         @exception_handler
         def my_function(arg1, arg2, exception_id=None, func_name=None):
             # function code here
-            pass
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         # Extract or generate tracking information
-        exception_id = kwargs.pop('exception_id', str(uuid.uuid4()))
-        func_name = kwargs.pop('func_name', func.__name__)
+        exception_id = kwargs.pop("exception_id", str(uuid.uuid4()))
+        func_name = kwargs.pop("func_name", func.__name__)
 
         # Extract all log_this_* arguments
         logged_args = {}
         keys_to_remove = []
         for key in kwargs:
-            if key.startswith('log_this_'):
+            if key.startswith("log_this_"):
                 # Remove the 'log_this_' prefix for cleaner logging
                 clean_key = key[9:]  # len('log_this_') = 9
                 logged_args[clean_key] = kwargs[key]
@@ -108,7 +167,7 @@ def exception_handler(func: Callable) -> Callable:
         try:
             return func(*args, **kwargs)
 
-        # Concrete Exceptions - Most Specific First
+        #### Concrete exceptions section, starting with most specific
 
         # System Exit Exceptions
         except KeyboardInterrupt as e:
@@ -399,6 +458,273 @@ def exception_handler(func: Callable) -> Callable:
     return wrapper
 
 
+def exception_handler_quiet(func: Callable) -> Callable:
+    """
+    Just like exception_handler except that
+    this _quiet version does not re-raise the error.
+    """
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # Extract or generate tracking information
+        exception_id = kwargs.pop("exception_id", str(uuid.uuid4()))
+        func_name = kwargs.pop("func_name", func.__name__)
+
+        # Extract all log_this_* arguments
+        logged_args = {}
+        keys_to_remove = []
+        for key in kwargs:
+            if key.startswith("log_this_"):
+                # Remove the 'log_this_' prefix for cleaner logging
+                clean_key = key[9:]  # len('log_this_') = 9
+                logged_args[clean_key] = kwargs[key]
+                keys_to_remove.append(key)
+
+        # Remove log_this_* arguments from kwargs
+        for key in keys_to_remove:
+            kwargs.pop(key)
+
+        try:
+            return func(*args, **kwargs)
+
+        #### Concrete exceptions section, starting with most specific
+
+        # System Exit Exceptions
+        except KeyboardInterrupt as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, KeyboardInterrupt, e, exc_info, logged_args)
+
+        except SystemExit as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, SystemExit, e, exc_info, logged_args)
+
+        # OS and I/O Exceptions
+        except FileNotFoundError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, FileNotFoundError, e, exc_info, logged_args)
+
+        except FileExistsError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, FileExistsError, e, exc_info, logged_args)
+
+        except IsADirectoryError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, IsADirectoryError, e, exc_info, logged_args)
+
+        except NotADirectoryError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, NotADirectoryError, e, exc_info, logged_args)
+
+        except PermissionError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, PermissionError, e, exc_info, logged_args)
+
+        except ProcessLookupError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, ProcessLookupError, e, exc_info, logged_args)
+
+        except TimeoutError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, TimeoutError, e, exc_info, logged_args)
+
+        except InterruptedError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, InterruptedError, e, exc_info, logged_args)
+
+        except ChildProcessError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, ChildProcessError, e, exc_info, logged_args)
+
+        except BlockingIOError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, BlockingIOError, e, exc_info, logged_args)
+
+        except ConnectionError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, ConnectionError, e, exc_info, logged_args)
+
+        except BrokenPipeError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, BrokenPipeError, e, exc_info, logged_args)
+
+        except ConnectionAbortedError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, ConnectionAbortedError, e, exc_info, logged_args)
+
+        except ConnectionRefusedError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, ConnectionRefusedError, e, exc_info, logged_args)
+            raise
+
+        except ConnectionResetError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, ConnectionResetError, e, exc_info, logged_args)
+
+        except OSError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, OSError, e, exc_info, logged_args)
+
+        # Arithmetic Exceptions
+        except ZeroDivisionError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, ZeroDivisionError, e, exc_info, logged_args)
+
+        except FloatingPointError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, FloatingPointError, e, exc_info, logged_args)
+
+        except OverflowError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, OverflowError, e, exc_info, logged_args)
+
+        # Type and Value Exceptions
+        except TypeError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, TypeError, e, exc_info, logged_args)
+
+        except ValueError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, ValueError, e, exc_info, logged_args)
+
+        except UnicodeError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, UnicodeError, e, exc_info, logged_args)
+
+        except UnicodeDecodeError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, UnicodeDecodeError, e, exc_info, logged_args)
+
+        except UnicodeEncodeError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, UnicodeEncodeError, e, exc_info, logged_args)
+
+        except UnicodeTranslateError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, UnicodeTranslateError, e, exc_info, logged_args)
+
+        # Lookup Exceptions
+        except KeyError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, KeyError, e, exc_info, logged_args)
+
+        except IndexError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, IndexError, e, exc_info, logged_args)
+
+        except AttributeError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, AttributeError, e, exc_info, logged_args)
+
+        except NameError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, NameError, e, exc_info, logged_args)
+
+        except UnboundLocalError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, UnboundLocalError, e, exc_info, logged_args)
+
+        # Import Exceptions
+        except ModuleNotFoundError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, ModuleNotFoundError, e, exc_info, logged_args)
+
+        except ImportError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, ImportError, e, exc_info, logged_args)
+
+        # Memory and Resource Exceptions
+        except MemoryError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, MemoryError, e, exc_info, logged_args)
+
+        except RecursionError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, RecursionError, e, exc_info, logged_args)
+
+        # Runtime Exceptions
+        except NotImplementedError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, NotImplementedError, e, exc_info, logged_args)
+
+        except StopIteration as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, StopIteration, e, exc_info, logged_args)
+
+        except StopAsyncIteration as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, StopAsyncIteration, e, exc_info, logged_args)
+
+        except GeneratorExit as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, GeneratorExit, e, exc_info, logged_args)
+
+        # Syntax and Indentation Exceptions
+        except SyntaxError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, SyntaxError, e, exc_info, logged_args)
+
+        except IndentationError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, IndentationError, e, exc_info, logged_args)
+
+        except TabError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, TabError, e, exc_info, logged_args)
+
+        # System Exceptions
+        except SystemError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, SystemError, e, exc_info, logged_args)
+
+        except ReferenceError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, ReferenceError, e, exc_info, logged_args)
+
+        # Buffer and EOFError
+        except BufferError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, BufferError, e, exc_info, logged_args)
+
+        except EOFError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, EOFError, e, exc_info, logged_args)
+
+        # Assertion Error
+        except AssertionError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, AssertionError, e, exc_info, logged_args)
+
+        # Runtime Error and Warning
+        except RuntimeError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, RuntimeError, e, exc_info, logged_args)
+
+        except RuntimeWarning as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, RuntimeWarning, e, exc_info, logged_args)
+
+        # Lookup Error (parent class - catch after specific lookup errors)
+        except LookupError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, LookupError, e, exc_info, logged_args)
+
+        # Arithmetic Error (parent class - catch after specific arithmetic errors)
+        except ArithmeticError as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, ArithmeticError, e, exc_info, logged_args)
+
+        # Base Exception classes (catch last)
+        except Exception as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, Exception, e, exc_info, logged_args)
+
+        except BaseException as e:
+            exc_info = sys.exc_info()
+            log_exception(exception_id, func_name, BaseException, e, exc_info, logged_args)
+
+    return wrapper
+
+
 # Convenience function for manual exception handling
 def handle_exception(
     exception_id: Optional[str] = None,
@@ -432,8 +758,10 @@ def handle_exception(
 
     exc_info = sys.exc_info()
     if exc_info[0] is None:
-        print("Warning: handle_exception called outside of exception context",
-              file=sys.stdout)
+        print(
+            "Warning: handle_exception called outside of exception context",
+            file=sys.stdout,
+        )
         return
 
     if exception_id is None:
@@ -470,7 +798,13 @@ if __name__ == "__main__":
         return d["b"]
 
     @exception_handler
-    def test_with_custom_id(data, exception_id=None, func_name=None, log_this_user=None, log_this_rate=None):
+    def test_with_custom_id(
+        data,
+        exception_id=None,
+        func_name=None,
+        log_this_user=None,
+        log_this_rate=None
+    ):
         """Test with custom exception_id, func_name, and log_this_* arguments"""
         return data[10]  # Will raise IndexError
 
@@ -501,12 +835,12 @@ if __name__ == "__main__":
     print("Test 4: Custom tracking info")
     custom_uuid = str(uuid.uuid4())
     try:
-        test_with_custom_id([1, 2, 3],
-                           exception_id=custom_uuid,
-                           func_name="custom_function_name",
-                           log_this_user="frank",
-                           log_this_rate=0.125)
+        test_with_custom_id(
+            [1, 2, 3],
+            exception_id=custom_uuid,
+            func_name="custom_function_name",
+            log_this_user="frank",
+            log_this_rate=0.125,
+        )
     except IndexError:
         print("Caught and re-raised as expected\n")
-
-    print("All tests completed!")
