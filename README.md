@@ -1,3 +1,5 @@
+![cdlogo](https://carefuldata.com/images/cdlogo.png)
+
 # Exception Logger
 
 Rather than needing to remember all of the exception types or do "catch all" exceptions, and rather than having to reimplement logging formats constantly,
