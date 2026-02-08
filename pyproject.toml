@@ -3,7 +3,7 @@ name = "exception_logger"
 version = "0.1.0"
 description = "An exception wrapper for decorating functions with detailed generic error handling and logging."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.6"
 dependencies = []
 authors = [
     {name = "Keegan Bowen", email = "carefuldata@protonmail.com"}
