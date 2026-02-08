@@ -4,7 +4,6 @@ Generic Exception Handler and Logger Module
 Provides a decorator for automatic exception handling and logging with detailed
 information for all standard Python built-in exceptions.
 """
-
 import functools
 import sys
 from datetime import datetime, timezone
@@ -36,9 +35,24 @@ def log_exception(
     # Extract helpful information
     exc_msg = str(exc_value) if str(exc_value) else "No message provided"
 
-    # Get line number if available
+    # Get line number from the traceback - need to find the frame in user code
+    # Walk back through the traceback to find the frame outside this module
     tb = exc_info[2]
-    line_no = tb.tb_lineno if tb else "Unknown"
+    line_no = "Unknown"
+    filename = "Unknown"
+
+    if tb:
+        # Get the deepest frame in the traceback (where the exception actually occurred)
+        while tb.tb_next is not None:
+            tb = tb.tb_next
+
+        # Now tb is at the deepest point - where the exception was raised
+        line_no = tb.tb_lineno
+        filename = tb.tb_frame.f_code.co_filename
+
+        # Extract just the filename without full path for cleaner logs
+        import os
+        filename = os.path.basename(filename)
 
     # Format logged arguments if present
     logged_args_str = ""
@@ -52,7 +66,7 @@ def log_exception(
     log_msg = (
         f"{timestamp} - {exception_id} - {func_name} - "
         f"{logged_args_str}"
-        f"ERROR: {exc_type.__name__}: {exc_msg} (Line: {line_no})"
+        f"ERROR: {exc_type.__name__}: {exc_msg} (File: {filename}, Line: {line_no})"
     )
 
     print(log_msg, file=sys.stdout)
