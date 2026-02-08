@@ -9,7 +9,7 @@ authors = [
     {name = "Keegan Bowen", email = "carefuldata@protonmail.com"}
 ]
 license = {text = "MIT"}
-keywords = ["error", "logging", "error handling", "error logging", "exception", "exceptions", "exception logging"]
+keywords = ["error", "logging", "error handling", "error logging", "exception", "exceptions", "exception logging", "tracebacks", "log"]
 
 [project.urls]
 Homepage = "https://carefuldata.com"
