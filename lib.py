@@ -55,7 +55,7 @@ def log_exception(
         f"ERROR: {exc_type.__name__}: {exc_msg} (Line: {line_no})"
     )
 
-    print(log_msg, file=sys.stderr)
+    print(log_msg, file=sys.stdout)
 
 
 def exception_handler(func: Callable) -> Callable:
@@ -419,7 +419,7 @@ def handle_exception(
     exc_info = sys.exc_info()
     if exc_info[0] is None:
         print("Warning: handle_exception called outside of exception context",
-              file=sys.stderr)
+              file=sys.stdout)
         return
 
     if exception_id is None:
