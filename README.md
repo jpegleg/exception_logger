@@ -107,7 +107,6 @@ Pass custom values for correlation across multiple operations:
 @exception_handler
 def database_query(query, exception_id=None, func_name=None):
     # Your code here
-    pass
 
 # Call with custom tracking
 transaction_id = str(uuid.uuid4())
