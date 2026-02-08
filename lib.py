@@ -1,6 +1,6 @@
 """
-Generic Exception Handler and Logger Module
-
+#### generic exception handler and logging module ####
+ 
 Provides a decorator for automatic exception handling and logging with detailed
 information for all standard Python built-in exceptions.
 """
