@@ -19,7 +19,7 @@ this module provides consistent and comprehensive logging and error handing appr
 Each logged exception follows this structure:
 
 ```
-ISO-8601-Timestamp - UUIDv4 - function_name - [logged args: key1: value1, key2: value2 - ]ERROR: ExceptionType: message (File: filename.py, Line: line_number)
+ISO-8601-Timestamp - UUIDv4 - function_name - [logged args: key1: value1, key2: value2] - ERROR: ExceptionType: message (File: filename.py, Line: line_number)
 ```
 
 Example without logged arguments:
@@ -49,26 +49,43 @@ Or include the module as `exception_logger.py` in your project, along with the M
 ## Usage
 
 The decorator automatically:
-- Accepts a UUID for logging or generates one if none is passed
+- Accepts a UUID for logging or generates one if one isn't provided
 - Detects the function name and logs it
 - Logs any exception with full details
 - Adds specified custom args to log lines
-- Re-raises the exception
+- Re-raises the exception (unless the 'quiet' version is used)
 
+There are two different functions available to decorate with, `exception_handler` and `exception_handler_quiet`.
+
+The `_quiet` version suppresses most tracebacks and does not re-raise the error. The only type of traceback that won't be surpressed are
+tracebacks outside of the fucnction that is decorated. So even if you decorate 'main', a syntax error that makes the file invalid Python
+will still have a traceback.
+
+Use caution with the `_quiet` version, as no further error handling is done in that case!
+
+Typically we want to use `exception_handler` instead of `exception_handler_quiet` so that the error is re-raised, but the quiet version
+is useful in cases where the function being decorated is the top level, such as when decorating main in the final script.
+
+The quiet version can be nice when we want to keep our log files very homogenous and single line, and completely in STDOUT.
+Of course we can still keep log files nice with the regular version too, with a little bit of work to handle our raised exceptions appropriately, like normal.
 
 ### Slap the decorator on main
 
-```python
-from exception_logger import exception_handler
+First let's look at a brutishly simple approach that logs all errors in the whole program and removes tracebacks from main and everything main calls.
 
-@exception_handler
+```python
+from exception_logger import exception_handler_quiet
+
+@exception_handler_quiet
 def main():
     # do everything normally and reap the benfits of the exception logging!
 ```
 
-If you decorate the main function, then there normally wouldn't be a need to decorate specific functions as that would duplicate error logs.
+If you decorate the main function, then there normally wouldn't be a need to decorate specific functions as that could duplicate error logs.
 
-While decorating main with the exception_handler is _super easy_ and actually awesome, in many cases you might want to customize the usage further and decorate individual functions.
+While decorating main is _super easy_ and actually awesome in some cases, in many cases you might want to customize the usage further and decorate individual functions.
+
+Using the `_quiet` version on main (or any function) can be dangerous since errors won't propagate any further.
 
 ### Decorating a function
 
@@ -380,6 +397,9 @@ predict(
 7. **Don't overload with log_this_* arguments**: Include only the most relevant context. Too many fields can make logs hard to read.
 
 8. **Use consistent naming**: If you log `user_id` in one function, use the same name in others for easier log searching.
+
+9. **Only use the quiet version if the error doesn't need to be raised any further.
+
 
 ## Example Log Output
 
