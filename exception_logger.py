@@ -74,63 +74,6 @@ def log_exception(
     print(log_msg, file=sys.stdout)
 
 
-# Convenience function for manual exception handling
-def handle_exception(
-    exception_id: Optional[str] = None, func_name: Optional[str] = None, **logged_args
-) -> None:
-    """
-    Manually log the current exception.
-
-    Call this within an except block to log the exception with the same
-    format as the decorator.
-
-    Args:
-        exception_id: Optional UUID for tracking. Generated if not provided.
-        func_name: Optional function name. Detected from caller if not provided.
-        **logged_args: Any additional context to log (e.g., user_id=123, rate=0.5)
-
-    Example:
-        try:
-            risky_operation()
-        except Exception:
-            handle_exception(
-                exception_id="custom-uuid",
-                func_name="my_function",
-                user_id=12345,
-                request_id="abc-123"
-            )
-            raise
-    """
-    import inspect
-
-    exc_info = sys.exc_info()
-    if exc_info[0] is None:
-        print(
-            "Warning: handle_exception called outside of exception context",
-            file=sys.stdout,
-        )
-        return
-
-    if exception_id is None:
-        exception_id = str(uuid.uuid4())
-
-    if func_name is None:
-        frame = inspect.currentframe()
-        if frame and frame.f_back:
-            func_name = frame.f_back.f_code.co_name
-        else:
-            func_name = "unknown"
-
-    log_exception(
-        exception_id,
-        func_name,
-        exc_info[0],
-        exc_info[1],
-        exc_info,
-        logged_args
-    )
-
-
 def exception_handler(func: Callable) -> Callable:
     """
     Decorator that wraps a function with comprehensive exception handling.
