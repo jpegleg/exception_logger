@@ -158,10 +158,9 @@ If an exception occurs, the log will include:
 
 **Benefits:**
 - Automatically includes relevant context without manual string formatting
-- Self-documenting - function signature shows what gets logged
+- Improve debugging - function signature shows what gets logged
 - Searchable logs - easily find errors by user_id, transaction_id, etc.
-- Clean code - no log message construction cluttering your business logic
-- Type-safe - works with IDE autocomplete
+- Simplify code - no log message construction cluttering your business logic
 
 ### Manual exception handling
 
