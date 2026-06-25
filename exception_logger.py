@@ -1,16 +1,13 @@
 """
 #### generic exception handler and logging module ####
-
 This module provides a decorator for automatic exception handling and logging with detailed
 information for all standard Python built-in exceptions.
 """
-
 import functools
 import sys
 from datetime import datetime, timezone
 from typing import Callable, Any, Optional
 import uuid
-
 
 def log_exception(
     exception_id: str,
@@ -32,39 +29,27 @@ def log_exception(
         logged_args: Dictionary of log_this_* arguments to include in log
     """
     timestamp = datetime.now(timezone.utc).isoformat()
-
-    # Extract helpful information
     exc_msg = str(exc_value) if str(exc_value) else "No message provided"
-
-    # Get line number from the traceback - need to find the frame in user code
-    # Walk back through the traceback to find the frame outside this module
     tb = exc_info[2]
     line_no = "Unknown"
     filename = "Unknown"
 
     if tb:
-        # Get the deepest frame in the traceback (where the exception actually occurred)
         while tb.tb_next is not None:
             tb = tb.tb_next
 
-        # Now tb is at the deepest point - where the exception was raised
         line_no = tb.tb_lineno
         filename = tb.tb_frame.f_code.co_filename
 
-        # Extract just the filename without full path for cleaner logs
         import os
-
         filename = os.path.basename(filename)
 
-    # Format logged arguments if present
     logged_args_str = ""
     if logged_args:
-        # Sort for consistent ordering in logs
         sorted_args = sorted(logged_args.items())
         args_parts = [f"{k}: {v}" for k, v in sorted_args]
         logged_args_str = f"logged args: {', '.join(args_parts)} - "
 
-    # Format the log message
     log_msg = (
         f"{timestamp} - {exception_id} - {func_name} - "
         f"{logged_args_str}"
@@ -84,35 +69,26 @@ def exception_handler(func: Callable) -> Callable:
     Usage:
         @exception_handler
         def my_function(arg1, arg2, exception_id=None, func_name=None):
-            # function code here
-    """
 
+    """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        # Extract or generate tracking information
         exception_id = kwargs.pop("exception_id", str(uuid.uuid4()))
         func_name = kwargs.pop("func_name", func.__name__)
-
-        # Extract all log_this_* arguments
         logged_args = {}
         keys_to_remove = []
         for key in kwargs:
             if key.startswith("log_this_"):
-                # Remove the 'log_this_' prefix for cleaner logging
                 clean_key = key[9:]  # len('log_this_') = 9
                 logged_args[clean_key] = kwargs[key]
                 keys_to_remove.append(key)
 
-        # Remove log_this_* arguments from kwargs
         for key in keys_to_remove:
             kwargs.pop(key)
 
         try:
             return func(*args, **kwargs)
 
-        #### Concrete exceptions section, starting with most specific
-
-        # System Exit Exceptions
         except KeyboardInterrupt as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, KeyboardInterrupt, e, exc_info, logged_args)
@@ -123,7 +99,6 @@ def exception_handler(func: Callable) -> Callable:
             log_exception(exception_id, func_name, SystemExit, e, exc_info, logged_args)
             raise
 
-        # OS and I/O Exceptions
         except FileNotFoundError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, FileNotFoundError, e, exc_info, logged_args)
@@ -204,7 +179,6 @@ def exception_handler(func: Callable) -> Callable:
             log_exception(exception_id, func_name, OSError, e, exc_info, logged_args)
             raise
 
-        # Arithmetic Exceptions
         except ZeroDivisionError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, ZeroDivisionError, e, exc_info, logged_args)
@@ -220,7 +194,6 @@ def exception_handler(func: Callable) -> Callable:
             log_exception(exception_id, func_name, OverflowError, e, exc_info, logged_args)
             raise
 
-        # Type and Value Exceptions
         except TypeError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, TypeError, e, exc_info, logged_args)
@@ -251,7 +224,6 @@ def exception_handler(func: Callable) -> Callable:
             log_exception(exception_id, func_name, UnicodeTranslateError, e, exc_info, logged_args)
             raise
 
-        # Lookup Exceptions
         except KeyError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, KeyError, e, exc_info, logged_args)
@@ -277,7 +249,6 @@ def exception_handler(func: Callable) -> Callable:
             log_exception(exception_id, func_name, UnboundLocalError, e, exc_info, logged_args)
             raise
 
-        # Import Exceptions
         except ModuleNotFoundError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, ModuleNotFoundError, e, exc_info, logged_args)
@@ -288,7 +259,6 @@ def exception_handler(func: Callable) -> Callable:
             log_exception(exception_id, func_name, ImportError, e, exc_info, logged_args)
             raise
 
-        # Memory and Resource Exceptions
         except MemoryError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, MemoryError, e, exc_info, logged_args)
@@ -299,7 +269,6 @@ def exception_handler(func: Callable) -> Callable:
             log_exception(exception_id, func_name, RecursionError, e, exc_info, logged_args)
             raise
 
-        # Runtime Exceptions
         except NotImplementedError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, NotImplementedError, e, exc_info, logged_args)
@@ -320,7 +289,6 @@ def exception_handler(func: Callable) -> Callable:
             log_exception(exception_id, func_name, GeneratorExit, e, exc_info, logged_args)
             raise
 
-        # Syntax and Indentation Exceptions
         except SyntaxError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, SyntaxError, e, exc_info, logged_args)
@@ -336,7 +304,6 @@ def exception_handler(func: Callable) -> Callable:
             log_exception(exception_id, func_name, TabError, e, exc_info, logged_args)
             raise
 
-        # System Exceptions
         except SystemError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, SystemError, e, exc_info, logged_args)
@@ -347,7 +314,6 @@ def exception_handler(func: Callable) -> Callable:
             log_exception(exception_id, func_name, ReferenceError, e, exc_info, logged_args)
             raise
 
-        # Buffer and EOFError
         except BufferError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, BufferError, e, exc_info, logged_args)
@@ -358,13 +324,11 @@ def exception_handler(func: Callable) -> Callable:
             log_exception(exception_id, func_name, EOFError, e, exc_info, logged_args)
             raise
 
-        # Assertion Error
         except AssertionError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, AssertionError, e, exc_info, logged_args)
             raise
 
-        # Runtime Error and Warning
         except RuntimeError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, RuntimeError, e, exc_info, logged_args)
@@ -375,19 +339,16 @@ def exception_handler(func: Callable) -> Callable:
             log_exception(exception_id, func_name, RuntimeWarning, e, exc_info, logged_args)
             raise
 
-        # Lookup Error (parent class - catch after specific lookup errors)
         except LookupError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, LookupError, e, exc_info, logged_args)
             raise
 
-        # Arithmetic Error (parent class - catch after specific arithmetic errors)
         except ArithmeticError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, ArithmeticError, e, exc_info, logged_args)
             raise
 
-        # Base Exception classes (catch last)
         except Exception as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, Exception, e, exc_info, logged_args)
@@ -406,33 +367,25 @@ def exception_handler_quiet(func: Callable) -> Callable:
     Just like exception_handler except that
     this _quiet version does not re-raise the error.
     """
-
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        # Extract or generate tracking information
         exception_id = kwargs.pop("exception_id", str(uuid.uuid4()))
         func_name = kwargs.pop("func_name", func.__name__)
-
-        # Extract all log_this_* arguments
         logged_args = {}
         keys_to_remove = []
         for key in kwargs:
             if key.startswith("log_this_"):
-                # Remove the 'log_this_' prefix for cleaner logging
-                clean_key = key[9:]  # len('log_this_') = 9
+                clean_key = key[9:]
                 logged_args[clean_key] = kwargs[key]
                 keys_to_remove.append(key)
 
-        # Remove log_this_* arguments from kwargs
         for key in keys_to_remove:
             kwargs.pop(key)
 
         try:
             return func(*args, **kwargs)
 
-        #### Concrete exceptions section, starting with most specific
 
-        # System Exit Exceptions
         except KeyboardInterrupt as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, KeyboardInterrupt, e, exc_info, logged_args)
@@ -441,7 +394,6 @@ def exception_handler_quiet(func: Callable) -> Callable:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, SystemExit, e, exc_info, logged_args)
 
-        # OS and I/O Exceptions
         except FileNotFoundError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, FileNotFoundError, e, exc_info, logged_args)
@@ -497,7 +449,6 @@ def exception_handler_quiet(func: Callable) -> Callable:
         except ConnectionRefusedError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, ConnectionRefusedError, e, exc_info, logged_args)
-            raise
 
         except ConnectionResetError as e:
             exc_info = sys.exc_info()
@@ -507,7 +458,6 @@ def exception_handler_quiet(func: Callable) -> Callable:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, OSError, e, exc_info, logged_args)
 
-        # Arithmetic Exceptions
         except ZeroDivisionError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, ZeroDivisionError, e, exc_info, logged_args)
@@ -520,7 +470,6 @@ def exception_handler_quiet(func: Callable) -> Callable:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, OverflowError, e, exc_info, logged_args)
 
-        # Type and Value Exceptions
         except TypeError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, TypeError, e, exc_info, logged_args)
@@ -545,7 +494,6 @@ def exception_handler_quiet(func: Callable) -> Callable:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, UnicodeTranslateError, e, exc_info, logged_args)
 
-        # Lookup Exceptions
         except KeyError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, KeyError, e, exc_info, logged_args)
@@ -566,7 +514,6 @@ def exception_handler_quiet(func: Callable) -> Callable:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, UnboundLocalError, e, exc_info, logged_args)
 
-        # Import Exceptions
         except ModuleNotFoundError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, ModuleNotFoundError, e, exc_info, logged_args)
@@ -575,7 +522,6 @@ def exception_handler_quiet(func: Callable) -> Callable:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, ImportError, e, exc_info, logged_args)
 
-        # Memory and Resource Exceptions
         except MemoryError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, MemoryError, e, exc_info, logged_args)
@@ -584,7 +530,6 @@ def exception_handler_quiet(func: Callable) -> Callable:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, RecursionError, e, exc_info, logged_args)
 
-        # Runtime Exceptions
         except NotImplementedError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, NotImplementedError, e, exc_info, logged_args)
@@ -601,7 +546,6 @@ def exception_handler_quiet(func: Callable) -> Callable:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, GeneratorExit, e, exc_info, logged_args)
 
-        # Syntax and Indentation Exceptions
         except SyntaxError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, SyntaxError, e, exc_info, logged_args)
@@ -614,7 +558,6 @@ def exception_handler_quiet(func: Callable) -> Callable:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, TabError, e, exc_info, logged_args)
 
-        # System Exceptions
         except SystemError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, SystemError, e, exc_info, logged_args)
@@ -623,7 +566,6 @@ def exception_handler_quiet(func: Callable) -> Callable:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, ReferenceError, e, exc_info, logged_args)
 
-        # Buffer and EOFError
         except BufferError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, BufferError, e, exc_info, logged_args)
@@ -632,12 +574,10 @@ def exception_handler_quiet(func: Callable) -> Callable:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, EOFError, e, exc_info, logged_args)
 
-        # Assertion Error
         except AssertionError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, AssertionError, e, exc_info, logged_args)
 
-        # Runtime Error and Warning
         except RuntimeError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, RuntimeError, e, exc_info, logged_args)
@@ -646,17 +586,14 @@ def exception_handler_quiet(func: Callable) -> Callable:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, RuntimeWarning, e, exc_info, logged_args)
 
-        # Lookup Error (parent class - catch after specific lookup errors)
         except LookupError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, LookupError, e, exc_info, logged_args)
 
-        # Arithmetic Error (parent class - catch after specific arithmetic errors)
         except ArithmeticError as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, ArithmeticError, e, exc_info, logged_args)
 
-        # Base Exception classes (catch last)
         except Exception as e:
             exc_info = sys.exc_info()
             log_exception(exception_id, func_name, Exception, e, exc_info, logged_args)
@@ -667,36 +604,11 @@ def exception_handler_quiet(func: Callable) -> Callable:
 
     return wrapper
 
-
-# Convenience function for manual exception handling
 def handle_exception(
     exception_id: Optional[str] = None,
     func_name: Optional[str] = None,
     **logged_args
 ) -> None:
-    """
-    Manually log the current exception.
-
-    Call this within an except block to log the exception with the same
-    format as the decorator.
-
-    Args:
-        exception_id: Optional UUID for tracking. Generated if not provided.
-        func_name: Optional function name. Detected from caller if not provided.
-        **logged_args: Any additional context to log (e.g., user_id=123, rate=0.5)
-
-    Example:
-        try:
-            risky_operation()
-        except Exception:
-            handle_exception(
-                exception_id="custom-uuid",
-                func_name="my_function",
-                user_id=12345,
-                request_id="abc-123"
-            )
-            raise
-    """
     import inspect
 
     exc_info = sys.exc_info()
@@ -721,8 +633,6 @@ def handle_exception(
 
 
 if __name__ == "__main__":
-    # Example usage and testing
-
     @exception_handler
     def test_division_by_zero():
         """Test ZeroDivisionError handling"""
@@ -749,32 +659,27 @@ if __name__ == "__main__":
         log_this_rate=None
     ):
         """Test with custom exception_id, func_name, and log_this_* arguments"""
-        return data[10]  # Will raise IndexError
+        return data[10]
 
     print("Testing exception_logger module...\n")
-
-    # Test 1: ZeroDivisionError
     print("Test 1: Division by zero")
     try:
         test_division_by_zero()
     except ZeroDivisionError:
         print("Caught and re-raised as expected\n")
 
-    # Test 2: FileNotFoundError
     print("Test 2: File not found")
     try:
         test_file_not_found()
     except FileNotFoundError:
         print("Caught and re-raised as expected\n")
 
-    # Test 3: KeyError
     print("Test 3: Key error")
     try:
         test_key_error()
     except KeyError:
         print("Caught and re-raised as expected\n")
 
-    # Test 4: Custom exception_id and func_name
     print("Test 4: Custom tracking info")
     custom_uuid = str(uuid.uuid4())
     try:
