@@ -428,7 +428,7 @@ predict(
 
 ## Project information
 
-This project is usees the MIT License.
+This project uses the MIT License.
 
 This project is reviewed and maintained by a human.
 
